@@ -1,0 +1,17 @@
+{
+  "name": "2048",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "dependencies": {
+    "@types/node": "^12.7.3",
+    "keypress": "^0.2.1",
+    "lodash": "^4.17.15",
+    "typescript": "^3.6.2"
+  },
+  "scripts": {
+    "start": "yarn build && yarn play",
+    "build": "tsc ./src/index.ts",
+    "play": "node ./src/index.js"
+  }
+}
