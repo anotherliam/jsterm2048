@@ -1,21 +1,17 @@
+"use strict";
 const shuffle = require("lodash/shuffle");
 const keypress = require("keypress");
-
 function clear() {
     process.stdout.write('\x1b[2J');
 }
-
 keypress(process.stdin);
-if (!process.stdin.setRawMode) process.exit();
-else process.stdin.setRawMode(true);
-
+if (!process.stdin.setRawMode)
+    process.exit();
+else
+    process.stdin.setRawMode(true);
 const debug = false;
-
 class Board {
-    width: number;
-    height: number;
-    tiles: (ITile | null)[][];
-    constructor(width: number, height: number) {
+    constructor(width, height) {
         this.width = width;
         this.height = height;
         const board = [];
@@ -25,38 +21,22 @@ class Board {
         this.tiles = board;
     }
 }
-
-interface IVector {
-    x: number,
-    y: number
-};
-
-interface ITile {
-    value: number,
-    id: number
-};
-
+;
+;
 class TileFactory {
-    lastId: number;
     constructor() {
         this.lastId = -1;
     }
-    generate(value: number): ITile {
+    generate(value) {
         this.lastId += 1;
         return {
             value,
             id: this.lastId
-        }
+        };
     }
 }
-
-interface IKey {
-    ctrl: boolean,
-    name: string
-}
-
-const waitForKey = () => new Promise<IKey>((res, rej) => {
-    process.stdin.once("keypress", (ch, key: IKey) => {
+const waitForKey = () => new Promise((res, rej) => {
+    process.stdin.once("keypress", (ch, key) => {
         if (key && key.ctrl && key.name == 'c') {
             process.stdin.pause();
             process.exit();
@@ -64,14 +44,8 @@ const waitForKey = () => new Promise<IKey>((res, rej) => {
         res(key);
     });
     process.stdin.resume();
-})
-
-
+});
 class Game {
-    board: Board;
-    tileFactory: TileFactory;
-    points: number
-
     constructor() {
         // Board is top left indexed 0,0 (x,y)
         // Board is array of columns which is an array of rows
@@ -79,45 +53,43 @@ class Game {
         this.tileFactory = new TileFactory();
         this.points = 0;
     }
-
     getAllEmptySpaces() {
-        const result: IVector[] = [];
+        const result = [];
         this.board.tiles.forEach((col, colIdx) => {
             col.forEach((row, rowIdx) => {
-                if (!row) result.push({x: rowIdx, y: colIdx})
-            })
+                if (!row)
+                    result.push({ x: rowIdx, y: colIdx });
+            });
         });
         return result;
     }
-    getTile({x, y}: IVector): ITile | null {
+    getTile({ x, y }) {
         return this.board.tiles[y][x] || null;
     }
-    setTile({x, y}: IVector, tile: ITile| null): void {
+    setTile({ x, y }, tile) {
         this.board.tiles[y][x] = tile;
-        debug && console.log(`Setting tile ${tile} at `, {x, y});
+        debug && console.log(`Setting tile ${tile} at `, { x, y });
     }
     prettyPrint() {
         clear();
-        const pretty = this.board.tiles.map(
-            (row) => row.map((item) => item === null ? "[ ]" : `[${item.value}]`).join("|")
-        ).join("\n");
+        const pretty = this.board.tiles.map((row) => row.map((item) => item === null ? "[ ]" : `[${item.value}]`).join("|")).join("\n");
         console.log(`--- (Score: ${this.points}) ---`);
         console.log(pretty);
     }
-    move(direction: string) {
+    move(direction) {
         // Moves the board in the given direction
-        let primaryKey: "x" | "y" = "y";
+        let primaryKey = "y";
         let primaryStart = 1;
-        let primaryEnd = (v: number) => v < this.board.height - 1;
+        let primaryEnd = (v) => v < this.board.height - 1;
         let primaryInc = 1;
-        let secondaryKey: "x" | "y" = "x";
+        let secondaryKey = "x";
         let secondaryMax = this.board.width - 1;
         let shiftDir = -1;
         switch (direction) {
             case "up":
                 primaryKey = "y";
                 primaryStart = 1;
-                primaryEnd = (v: number) => v <= this.board.height - 1;
+                primaryEnd = (v) => v <= this.board.height - 1;
                 primaryInc = 1;
                 secondaryMax = this.board.width - 1;
                 shiftDir = -1;
@@ -125,7 +97,7 @@ class Game {
             case "down":
                 primaryKey = "y";
                 primaryStart = this.board.height - 2;
-                primaryEnd = (v: number) => v >= 0;
+                primaryEnd = (v) => v >= 0;
                 primaryInc = -1;
                 secondaryMax = this.board.width - 1;
                 shiftDir = 1;
@@ -133,7 +105,7 @@ class Game {
             case "left":
                 primaryKey = "x";
                 primaryStart = 1;
-                primaryEnd = (v: number) => v <= this.board.width - 1;
+                primaryEnd = (v) => v <= this.board.width - 1;
                 primaryInc = 1;
                 secondaryMax = this.board.height - 1;
                 shiftDir = -1;
@@ -141,7 +113,7 @@ class Game {
             case "right":
                 primaryKey = "x";
                 primaryStart = this.board.width - 2;
-                primaryEnd = (v: number) => v >= 0;
+                primaryEnd = (v) => v >= 0;
                 primaryInc = -1;
                 secondaryMax = this.board.height - 1;
                 shiftDir = 1;
@@ -151,21 +123,21 @@ class Game {
             for (let j = 0; j <= secondaryMax; j++) {
                 const x = (primaryKey === "x") ? i : j;
                 const y = (primaryKey === "x") ? j : i;
-                const thisVector: IVector = {x, y};
+                const thisVector = { x, y };
                 const node = this.getTile(thisVector);
                 if (node) {
-                    const shiftedVector = {...thisVector};
+                    const shiftedVector = { ...thisVector };
                     shiftedVector[primaryKey] += shiftDir;
                     const toNode = this.getTile(shiftedVector);
                     if (!toNode) {
                         this.setTile(shiftedVector, node);
                         this.setTile(thisVector, null);
-                    } else {
+                    }
+                    else {
                         // merge
                         if ((node.value === 1 && toNode.value === 2) ||
                             (node.value === 2 && toNode.value === 1) ||
-                            (node.value >= 3 && toNode.value >= 3 && node.value === toNode.value)
-                        ) {
+                            (node.value >= 3 && toNode.value >= 3 && node.value === toNode.value)) {
                             toNode.value += node.value;
                             this.setTile(thisVector, null);
                             this.scorePoints(Math.floor(toNode.value / 3));
@@ -175,10 +147,10 @@ class Game {
             }
         }
     }
-    scorePoints(val: number) {
+    scorePoints(val) {
         this.points += val;
     }
-    spawnRandom(val = 2, num = 1, freeSpaces: IVector[] | null = null): boolean {
+    spawnRandom(val = 2, num = 1, freeSpaces = null) {
         const spaces = freeSpaces || shuffle(this.getAllEmptySpaces());
         debug && console.log(`Spawning ${num} more. Spaces: `, spaces);
         const space = spaces.shift();
@@ -186,10 +158,12 @@ class Game {
             this.setTile(space, this.tileFactory.generate(val));
             if (num >= 2) {
                 return this.spawnRandom(val, num - 1, spaces);
-            } else {
+            }
+            else {
                 return true;
             }
-        } else {
+        }
+        else {
             return false;
         }
     }
@@ -207,7 +181,8 @@ class Game {
                 this.move(key.name);
                 if (this.spawnRandom(Math.floor(Math.random() * 2) + 1)) {
                     this.prettyPrint();
-                } else {
+                }
+                else {
                     console.log("Game Over");
                     this.prettyPrint();
                     ended = true;
@@ -217,6 +192,5 @@ class Game {
         process.exit();
     }
 }
-
 const g = new Game();
 g.start();

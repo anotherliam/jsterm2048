@@ -11,7 +11,7 @@
   },
   "scripts": {
     "start": "yarn build && yarn play",
-    "build": "tsc ./src/index.ts",
-    "play": "node ./src/index.js"
+    "build": "tsc",
+    "play": "node ./build/app.js"
   }
 }

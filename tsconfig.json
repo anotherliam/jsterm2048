@@ -1,11 +1,9 @@
 {
-    "compilerOptions": {
-        "outDir": "./built",
-        "allowJs": true,
-        "target": "es2016",
-        "strict": true
-    },
-    "include": [
-        "./src"
-    ]
+  "compilerOptions": {
+    "target": "es2018",
+    "module": "system",
+    "outFile": "./build/app.js",
+    "strict": true,
+    "esModuleInterop": true
+  }
 }
